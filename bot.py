@@ -19,7 +19,7 @@ def get_signal(rsi, ema20, ema50, macd, price):
     buy_score = 0
     sell_score = 0
 
-    # شروط BUY
+    # BUY
     if rsi > 55:
         buy_score += 1
     if ema20 > ema50:
@@ -29,7 +29,7 @@ def get_signal(rsi, ema20, ema50, macd, price):
     if price > ema20:
         buy_score += 1
 
-    # شروط SELL
+    # SELL
     if rsi < 45:
         sell_score += 1
     if ema20 < ema50:
@@ -52,16 +52,14 @@ def get_signal(rsi, ema20, ema50, macd, price):
 
     return "WAIT ⏳ لا تدخل"
 
-# تشغيل البوت في Loop
+# تشغيل البوت في الخلفية
 def run_bot():
     while True:
-        # مثال تجريبي (بدلهم لاحقاً ببيانات حقيقية)
         signal = get_signal(60, 100, 90, 1, 110)
         print(signal)
+        time.sleep(10)
 
-        time.sleep(10)  # كل 10 ثواني
-
-# تشغيل الاثنين مع بعض
+# التشغيل
 if __name__ == "__main__":
     Thread(target=run_bot).start()
 
