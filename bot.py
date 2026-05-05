@@ -123,3 +123,7 @@ def get_price(symbol="BTCUSDT"):
     url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}"
     res = requests.get(url).json()
     return res["price"]
+from datetime import datetime
+
+def get_time():
+    return datetime.now().strftime("%H:%M:%S")
