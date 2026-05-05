@@ -127,3 +127,15 @@ from datetime import datetime
 
 def get_time():
     return datetime.now().strftime("%H:%M:%S")
+price = get_price("BTCUSDT")
+time_now = get_time()
+
+message = f"""
+📊 BTC/USDT
+💰 السعر: {price}
+⏰ الوقت: {time_now}
+
+📢 الإشارة: {signal}
+"""
+
+send_message(message)
