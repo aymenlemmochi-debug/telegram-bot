@@ -1,67 +1,42 @@
-import os
+# ====== الإعدادات ======
+TOKEN = "8712330118:AAF3Wkg7Rri-_zMDp6TTuqxmb-I0lsxLMJg"
+CHAT_ID = "7113805375"
+
+# ====== المكتبات ======
+import requests
 import time
+import os
 from flask import Flask
 from threading import Thread
 
 app = Flask(__name__)
 
-# الصفحة الرئيسية (باش Render ما يطفيش)
-@app.route('/')
-def home():
-    return "Bot is running!"
+# ====== دالة إرسال رسالة ======
+def send_message(text):
+    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+    data = {
+        "chat_id": CHAT_ID,
+        "text": text
+    }
+    requests.post(url, data=data)
 
-# دالة الإشارة
-def get_signal(rsi, ema20, ema50, macd, price):
+# ====== إشارات بسيطة (تجريب) ======
+def get_signal():
+    import random
+    signals = [
+        "BUY 🔥 قوي",
+        "SELL 🔥 قوي",
+        "WAIT ⏳ لا تدخل"
+    ]
+    return random.choice(signals)
 
-    if 45 < rsi < 55:
-        return "WAIT ⏳ سوق ضعيف"
-
-    buy_score = 0
-    sell_score = 0
-
-    # BUY
-    if rsi > 55:
-        buy_score += 1
-    if ema20 > ema50:
-        buy_score += 1
-    if macd > 0:
-        buy_score += 1
-    if price > ema20:
-        buy_score += 1
-
-    # SELL
-    if rsi < 45:
-        sell_score += 1
-    if ema20 < ema50:
-        sell_score += 1
-    if macd < 0:
-        sell_score += 1
-    if price < ema20:
-        sell_score += 1
-
-    # القرار
-    if buy_score >= 4:
-        return "BUY 🔥 قوي"
-    elif buy_score == 3:
-        return "BUY ⚡ متوسط"
-
-    if sell_score >= 4:
-        return "SELL 🔥 قوي"
-    elif sell_score == 3:
-        return "SELL ⚡ متوسط"
-
-    return "WAIT ⏳ لا تدخل"
-
-# تشغيل البوت في الخلفية
+# ====== تشغيل البوت ======
 def run_bot():
     while True:
-        signal = get_signal(60, 100, 90, 1, 110)
-        print(signal)
-        time.sleep(10)
+        signal = get_signal()
+        send_message(signal)
+        print("Sent:", signal)
+        time.sleep(10)  # كل 10 ثواني
 
-# التشغيل
-if __name__ == "__main__":
-    Thread(target=run_bot).start()
-
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+# ====== ويب سيرفر (باش يبقى شغال) ======
+@app
