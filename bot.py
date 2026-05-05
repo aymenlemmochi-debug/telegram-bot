@@ -107,3 +107,15 @@ if __name__ == "__main__":
     Thread(target=run_bot).start()
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+last_signal = ""
+
+def run_bot():
+    global last_signal
+    while True:
+        signal = get_signal()
+
+        if signal != last_signal:
+            send_message(signal)
+            last_signal = signal
+
+        time.sleep(60)
