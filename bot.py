@@ -22,13 +22,13 @@ def send_message(text):
     requests.post(url, data=data)
 
 # ====== جلب سعر مباشر ======
-def get_price(symbol):
+def get_price(symbol="BTCUSDT"):
     url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}"
     res = requests.get(url).json()
     return float(res["price"])
 
-# ====== جلب بيانات ======
-def get_price_data(symbol):
+# ====== جلب بيانات الشموع ======
+def get_price_data(symbol="BTCUSDT"):
     url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval=1m&limit=50"
     data = requests.get(url).json()
     closes = [float(candle[4]) for candle in data]
@@ -36,7 +36,8 @@ def get_price_data(symbol):
 
 # ====== RSI ======
 def calculate_rsi(prices, period=14):
-    gains, losses = [], []
+    gains = []
+    losses = []
 
     for i in range(1, len(prices)):
         diff = prices[i] - prices[i-1]
@@ -66,7 +67,11 @@ def calculate_ema(prices, period=20):
 
     return ema
 
-# ====== تحليل ======
+# ====== الوقت ======
+def get_time():
+    return datetime.now().strftime("%H:%M:%S")
+
+# ====== التحليل ======
 def get_signal(symbol):
     prices = get_price_data(symbol)
 
@@ -74,44 +79,44 @@ def get_signal(symbol):
     ema = calculate_ema(prices)
     last_price = prices[-1]
 
-    if rsi < 30 and last_price > ema:
-        return "BUY 🔥 قوي"
+    # BUY
+    if rsi < 40 and last_price > ema:
+        signal = "BUY 🔥"
 
-    elif rsi > 70 and last_price < ema:
-        return "SELL 🔥 قوي"
+    # SELL
+    elif rsi > 60 and last_price < ema:
+        signal = "SELL 🔥"
 
-    return "WAIT ⏳"
+    else:
+        signal = "WAIT ⏳"
 
-# ====== الوقت ======
-def get_time():
-    return datetime.now().strftime("%H:%M:%S")
+    price_now = get_price(symbol)
+    time_now = get_time()
 
-# ====== تشغيل ======
+    message = f"""
+📊 {symbol}
+💰 السعر: {price_now}
+⏰ الوقت: {time_now}
+
+📢 الإشارة: {signal}
+📈 RSI: {round(rsi,2)}
+"""
+
+    return message
+
+# ====== تشغيل البوت ======
 last_signals = {}
 
 def run_bot():
-    global last_signals
-
     symbols = ["BTCUSDT", "ETHUSDT", "ADAUSDT", "LTCUSDT"]
 
     while True:
         for symbol in symbols:
             signal = get_signal(symbol)
-            price = get_price(symbol)
-            time_now = get_time()
 
-            # منع التكرار
             if last_signals.get(symbol) != signal:
-                message = f"""
-📊 {symbol}
-💰 السعر: {price}
-⏰ الوقت: {time_now}
-
-📢 الإشارة: {signal}
-"""
-                send_message(message)
-                print(message)
-
+                send_message(signal)
+                print(signal)
                 last_signals[symbol] = signal
 
         time.sleep(60)
