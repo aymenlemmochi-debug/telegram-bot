@@ -119,3 +119,7 @@ def run_bot():
             last_signal = signal
 
         time.sleep(60)
+def get_price(symbol="BTCUSDT"):
+    url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}"
+    res = requests.get(url).json()
+    return res["price"]
