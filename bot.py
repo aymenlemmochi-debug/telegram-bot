@@ -20,32 +20,83 @@ def send_message(text):
     }
     requests.post(url, data=data)
 
-# ====== إشارات بسيطة ======
-import random
+# ====== جلب بيانات من Binance ======
+def get_price_data(symbol="BTCUSDT"):
+    url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval=1m&limit=50"
+    data = requests.get(url).json()
+    closes = [float(candle[4]) for candle in data]
+    return closes
 
-def get_signal():
-    buy_score = random.randint(0, 5)
-    sell_score = random.randint(0, 5)
+# ====== حساب RSI ======
+def calculate_rsi(prices, period=14):
+    gains = []
+    losses = []
 
-    if buy_score >= 3:
-        return "BUY 🔥 قوي"
-    elif buy_score == 2:
-        return "BUY ⚡ متوسط"
+    for i in range(1, len(prices)):
+        diff = prices[i] - prices[i-1]
+        if diff > 0:
+            gains.append(diff)
+            losses.append(0)
+        else:
+            gains.append(0)
+            losses.append(abs(diff))
 
-    if sell_score >= 3:
-        return "SELL 🔥 قوي"
-    elif sell_score == 2:
-        return "SELL ⚡ متوسط"
+    avg_gain = sum(gains[-period:]) / period
+    avg_loss = sum(losses[-period:]) / period
 
-    return "WAIT ⏳ لا تدخل"
+    if avg_loss == 0:
+        return 100
 
-# ====== تشغيل البوت ======
+    rs = avg_gain / avg_loss
+    return 100 - (100 / (1 + rs))
+
+# ====== حساب EMA ======
+def calculate_ema(prices, period=20):
+    ema = prices[0]
+    k = 2 / (period + 1)
+
+    for price in prices:
+        ema = price * k + ema * (1 - k)
+
+    return ema
+
+# ====== تحليل ======
+def get_signal(symbol):
+    prices = get_price_data(symbol)
+
+    rsi = calculate_rsi(prices)
+    ema = calculate_ema(prices)
+
+    last_price = prices[-1]
+
+    # BUY
+    if rsi < 30 and last_price > ema:
+        return f"{symbol} BUY 🔥 RSI={round(rsi,2)}"
+
+    # SELL
+    elif rsi > 70 and last_price < ema:
+        return f"{symbol} SELL 🔥 RSI={round(rsi,2)}"
+
+    return f"{symbol} WAIT ⏳ RSI={round(rsi,2)}"
+
+# ====== تشغيل ======
+last_signal = ""
+
 def run_bot():
+    global last_signal
+
+    symbols = ["BTCUSDT", "ETHUSDT", "ADAUSDT", "LTCUSDT"]
+
     while True:
-        signal = get_signal()
-        send_message(signal)
-        print(signal)
-        time.sleep(10)
+        for symbol in symbols:
+            signal = get_signal(symbol)
+
+            if signal != last_signal:
+                send_message(signal)
+                print(signal)
+                last_signal = signal
+
+        time.sleep(60)
 
 # ====== السيرفر ======
 @app.route('/')
